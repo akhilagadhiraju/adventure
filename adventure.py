@@ -59,12 +59,12 @@ class AdventureGame:
         handler(options)
 
     def handle_go(self, direction):
-        if direction in self.visited_exits.get(self.current_room['name'], {}):
+        key = (self.current_room['name'], direction)
+        if key in self.visited_exits:
             print("You have already visited this exit in this direction.")
             return
-
         if self.current_room['exits'].get(direction):
-            self.visited_exits[self.current_room['name']][direction] = self.current_room
+            self.visited_exits[key] = self.current_room
             self.current_room = self.rooms[self.current_room['exits'][direction]]
             self.describe_room()
         else:
@@ -101,6 +101,7 @@ class AdventureGame:
             print(f"  {desc}")
 
     def handle_quit(self):
+        self.visited_exits = {}
         self.running = False
         print("Goodbye!")
 
