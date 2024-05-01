@@ -3,6 +3,7 @@ import sys
 
 class AdventureGame:
     def __init__(self, filename):
+        self.visited_exits = {}
         self.game_map = self.load_map(filename)
         self.rooms = {room['name']: room for room in self.game_map['rooms']}
         self.current_room = self.rooms[self.game_map['start']]
@@ -46,29 +47,25 @@ class AdventureGame:
 
     def describe_room(self):
         print(f"\n> {self.current_room['name']}\n{self.current_room['desc']}")
-    # Check if 'items' key exists in the dictionary before accessing it
         if 'items' in self.current_room and self.current_room['items']:
             print("Items in the room: " + ", ".join(self.current_room['items']))
         print("Exits: " + ', '.join(self.current_room['exits'].keys()))
-
 
     def parse_command(self, command):
         args = command.split()
         action = args[0]
         options = ' '.join(args[1:])
-        if hasattr(self, f'handle_{action}'):
-            handler = getattr(self, f'handle_{action}')
-            if action in ['look', 'inventory', 'help', 'quit']:
-                handler()
-            else:
-                handler(options)
-        else:
-            print("I don't understand that command.")
+        handler = getattr(self, f'handle_{action}', lambda: print("I don't understand that command."))
+        handler(options)
 
     def handle_go(self, direction):
-        if direction in self.current_room['exits']:
-            new_room_name = self.current_room['exits'][direction]
-            self.current_room = self.rooms[new_room_name]
+        if direction in self.visited_exits.get(self.current_room['name'], {}):
+            print("You have already visited this exit in this direction.")
+            return
+
+        if self.current_room['exits'].get(direction):
+            self.visited_exits[self.current_room['name']][direction] = self.current_room
+            self.current_room = self.rooms[self.current_room['exits'][direction]]
             self.describe_room()
         else:
             print("You can't go that way.")
@@ -84,8 +81,6 @@ class AdventureGame:
     def handle_drop(self, item):
         if item in self.inventory:
             self.inventory.remove(item)
-            if 'items' not in self.current_room:
-                self.current_room['items'] = []
             self.current_room['items'].append(item)
             print(f"You dropped the {item}.")
         else:
@@ -110,9 +105,13 @@ class AdventureGame:
         print("Goodbye!")
 
     def run(self):
+        self.visited_exits = {}
         self.describe_room()
         while self.running:
             command = input("What would you like to do? ").strip().lower()
+            if command == "quit":
+                self.handle_quit()
+                break
             self.parse_command(command)
 
 if __name__ == "__main__":
