@@ -3,7 +3,6 @@ import sys
 
 class AdventureGame:
     def __init__(self, filename):
-        self.visited_exits = {}
         self.game_map = self.load_map(filename)
         self.rooms = {room['name']: room for room in self.game_map['rooms']}
         self.current_room = self.rooms[self.game_map['start']]
@@ -18,6 +17,7 @@ class AdventureGame:
             "quit": "quit - Exit the game.",
             "help": "help - Show this help message."
         }
+        self.visited_exits = {}
 
     def load_map(self, filename):
         try:
@@ -54,15 +54,16 @@ class AdventureGame:
     def parse_command(self, command):
         args = command.split()
         action = args[0]
-        options = ' '.join(args[1:])
+        options = args[1:]
         handler = getattr(self, f'handle_{action}', lambda: print("I don't understand that command."))
-        handler(options)
+        handler(*options)
 
     def handle_go(self, direction):
         key = (self.current_room['name'], direction)
         if key in self.visited_exits:
             print("You have already visited this exit in this direction.")
             return
+
         if self.current_room['exits'].get(direction):
             self.visited_exits[key] = self.current_room
             self.current_room = self.rooms[self.current_room['exits'][direction]]
@@ -112,8 +113,8 @@ class AdventureGame:
             command = input("What would you like to do? ").strip().lower()
             if command == "quit":
                 self.handle_quit()
-                break
-            self.parse_command(command)
+            else:
+                self.parse_command(command)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
