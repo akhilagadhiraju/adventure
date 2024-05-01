@@ -46,9 +46,11 @@ class AdventureGame:
 
     def describe_room(self):
         print(f"\n> {self.current_room['name']}\n{self.current_room['desc']}")
-        if self.current_room['items']:
+    # Check if 'items' key exists in the dictionary before accessing it
+        if 'items' in self.current_room and self.current_room['items']:
             print("Items in the room: " + ", ".join(self.current_room['items']))
         print("Exits: " + ', '.join(self.current_room['exits'].keys()))
+
 
     def parse_command(self, command):
         args = command.split()
