@@ -24,42 +24,39 @@ def load_map(filename):
         sys.stderr.write(str(e))
         sys.exit(1)
 
+def get_direction(command, room_info):
+    direction = command.split()[1]
+    possible_exits = [exit for exit in room_info['exits'] if exit.startswith(direction)]
+    if len(possible_exits) == 1:
+        return possible_exits[0], None
+    elif len(possible_exits) > 1:
+        return None, f"Did you want to go {' or '.join(possible_exits)}?"
+    else:
+        return None, f"There's no way to go {direction}."
+
 def game_loop(game_map):
     current_room = game_map['start']
     inventory = []
-    commands = {
-        "go": "go ...",
-        "look": "look",
-        "get": "get ...",
-        "inventory": "inventory",
-        "quit": "quit",
-        "drop": "drop ...",
-        "help": "help"
-    }
-
-    def display_room_info(room):
-        print(f"> {room['name']}\n")
-        print(room['desc'] + "\n")
-        if 'items' in room and room['items']:
-            print("Items: " + ", ".join(room['items']))
-        print("Exits: " + " ".join(room['exits'].keys()) + "\n")
 
     while True:
         room_info = next(room for room in game_map['rooms'] if room['name'] == current_room)
-        display_room_info(room_info)
+        print(f"> {room_info['name']}\n{room_info['desc']}\n")
+        if 'items' in room_info and room_info['items']:
+            print("Items: " + ", ".join(room_info['items']))
+        print("Exits: " + " ".join(room_info['exits'].keys()) + "\n")
         command = input("What would you like to do? ").strip().lower()
 
-        if command in ["quit", "exit"]:
+        if command == "quit":
             print("Goodbye!")
             break
         elif command.startswith("go "):
-            direction = command.split()[1]
-            if direction in room_info['exits']:
+            direction, error_message = get_direction(command, room_info)
+            if direction:
                 current_room = room_info['exits'][direction]
             else:
-                print(f"There's no way to go {direction}.")
+                print(error_message)
         elif command == "look":
-            continue
+            continue 
         elif command.startswith("get "):
             item = command.split(maxsplit=1)[1]
             if "items" in room_info and item in room_info['items']:
@@ -83,7 +80,7 @@ def game_loop(game_map):
                 print(f"You don't have {item} to drop.")
         elif command == "help":
             print("You can run the following commands:")
-            for cmd in commands.values():
+            for cmd in command.values():
                 print(f"  {cmd}")
         else:
             print("Unknown command.")
