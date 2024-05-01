@@ -45,48 +45,37 @@ class AdventureGame:
             raise ValueError("All exits must point to existing rooms")
 
     def describe_room(self):
-        room = self.current_room
-        print(f"\n> {room['name']}")
-        print(room['desc'])
-        if 'items' in room and room['items']:
-            print("Items in the room: " + ", ".join(room['items']))
-        print("Exits: " + ', '.join(room['exits'].keys()))
+        print(f"\n> {self.current_room['name']}\n{self.current_room['desc']}")
+        if self.current_room['items']:
+            print("Items in the room: " + ", ".join(self.current_room['items']))
+        print("Exits: " + ', '.join(self.current_room['exits'].keys()))
 
     def parse_command(self, command):
         args = command.split()
         action = args[0]
-        option = ' '.join(args[1:])
-        if action in ['look', 'inventory', 'help', 'quit']:
-            getattr(self, f'handle_{action}')()
+        options = ' '.join(args[1:])
+        if hasattr(self, f'handle_{action}'):
+            handler = getattr(self, f'handle_{action}')
+            if action in ['look', 'inventory', 'help', 'quit']:
+                handler()
+            else:
+                handler(options)
         else:
-            getattr(self, f'handle_{action}')(option)
+            print("I don't understand that command.")
 
     def handle_go(self, direction):
         if direction in self.current_room['exits']:
             new_room_name = self.current_room['exits'][direction]
-            if new_room_name == "Boss Room":
-                self.check_win_condition()
-            else:
-                self.current_room = self.rooms[new_room_name]
-                self.describe_room()
+            self.current_room = self.rooms[new_room_name]
+            self.describe_room()
         else:
             print("You can't go that way.")
 
-    def check_win_condition(self):
-        required_items = ['sword', 'magic wand']
-        if all(item in self.inventory for item in required_items):
-            print("Congratulations! You have defeated the boss and won the game!")
-            self.running = False
-        else:
-            print("You have entered the Boss Room without the necessary items and have been defeated!")
-            self.running = False
-
     def handle_get(self, item):
-        if 'items' in self.current_room and item in self.current_room['items']:
-            self.inventory.append(item)
+        if item in self.current_room['items']:
             self.current_room['items'].remove(item)
+            self.inventory.append(item)
             print(f"You picked up the {item}.")
-            self.describe_room()
         else:
             print(f"There is no {item} here to pick up.")
 
@@ -97,7 +86,6 @@ class AdventureGame:
                 self.current_room['items'] = []
             self.current_room['items'].append(item)
             print(f"You dropped the {item}.")
-            self.describe_room()
         else:
             print(f"You do not have a {item} to drop.")
 
@@ -111,16 +99,13 @@ class AdventureGame:
             print("You are not carrying anything.")
 
     def handle_help(self):
-        self.show_help()
+        print("You can run the following commands:")
+        for desc in self.commands.values():
+            print(f"  {desc}")
 
     def handle_quit(self):
         self.running = False
         print("Goodbye!")
-
-    def show_help(self):
-        print("You can run the following commands:")
-        for desc in self.commands.values():
-            print(f"  {desc}")
 
     def run(self):
         self.describe_room()
@@ -135,6 +120,7 @@ if __name__ == "__main__":
 
     game = AdventureGame(sys.argv[1])
     game.run()
+
 
 
 #comment
