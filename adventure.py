@@ -56,19 +56,30 @@ class AdventureGame:
         args = command.split()
         action = args[0]
         option = ' '.join(args[1:])
-        method_name = f"handle_{action}"
-        if method_name in dir(self):
-            getattr(self, method_name)(option)
+        if action in ['look', 'inventory', 'help', 'quit']:
+            getattr(self, f'handle_{action}')()
         else:
-            print("I don't understand that command.")
+            getattr(self, f'handle_{action}')(option)
 
     def handle_go(self, direction):
         if direction in self.current_room['exits']:
             new_room_name = self.current_room['exits'][direction]
-            self.current_room = self.rooms[new_room_name]
-            self.describe_room()
+            if new_room_name == "Boss Room":
+                self.check_win_condition()
+            else:
+                self.current_room = self.rooms[new_room_name]
+                self.describe_room()
         else:
             print("You can't go that way.")
+
+    def check_win_condition(self):
+        required_items = ['sword', 'magic wand']
+        if all(item in self.inventory for item in required_items):
+            print("Congratulations! You have defeated the boss and won the game!")
+            self.running = False
+        else:
+            print("You have entered the Boss Room without the necessary items and have been defeated!")
+            self.running = False
 
     def handle_get(self, item):
         if 'items' in self.current_room and item in self.current_room['items']:

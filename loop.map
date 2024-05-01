@@ -10,20 +10,26 @@
     {
       "name": "A blue room",
       "desc": "This room is simple, too, but with blue walls.",
-      "exits": { "east": "A green room", "south": "A white room" },
+      "exits": { "east": "A green room", "south": "A white room", "north": "Boss Room" },
       "items": []
     },
     {
       "name": "A green room",
       "desc": "You are in a simple room, with bright green walls.",
       "exits": { "west": "A blue room", "south": "A red room" },
-      "items": []
+      "items": ["banana", "bandana", "bellows", "deck of cards"]
     },
     {
       "name": "A red room",
       "desc": "This room is fancy. It's red!",
       "exits": { "north": "A green room", "west": "A white room" },
       "items": ["rose"]
+    },
+    {
+      "name": "Boss Room",
+      "desc": "You see a large room with a menacing figure in the center. You must have a sword and a magic wand to win.",
+      "exits": { "south": "A blue room" },
+      "items": []
     }
   ]
 }
