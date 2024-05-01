@@ -1,102 +1,125 @@
-import json
 import sys
+import json
 
 def load_map(filename):
-    try:
-        with open(filename, 'r') as file:
-            game_map = json.load(file)
-        
-        # Basic validation (omitted for brevity)
-        return game_map
-    except Exception as e:
-        sys.stderr.write(str(e))
-        sys.exit(1)
+    with open(filename, 'r') as file:
+        return json.load(file)
 
-def resolve_abbreviation(input, choices, full_forms):
-    if input in full_forms:
-        full_input = full_forms[input]
-        if full_input in choices:
-            return full_input, None  # Direct match to full form
-    matches = [choice for choice in choices if choice.startswith(input)]
+def display_room(room_id, rooms):
+    room = rooms[room_id]
+    room_desc = room['desc']
+    exits_desc = 'Exits: ' + ' '.join(room['exits'].keys())
+    items_desc = 'Items: ' + ' '.join(room.get('items', []))
+    return f"> {room_id}\n\n{room_desc}\n\n{exits_desc}\n\n{items_desc}\n\nWhat would you like to do?"
+
+def resolve_abbreviation(input_str, options, type="general"):
+    if input_str == '':
+        return '', False
+    matches = [opt for opt in options if opt.startswith(input_str)]
     if len(matches) == 1:
-        return matches[0], None
-    elif len(matches) > 1:
-        return None, f"Did you mean {' or '.join(matches)}?"
-    return None, f"No valid options for '{input}'"
+        return matches[0], True
+    elif not matches:
+        return input_str, False
+    elif type == "verb" and len(matches) > 1:
+        return f"Did you want to {input_str} {' or '.join(matches)}?", False
+    return ', '.join(matches), False
 
-def game_loop(game_map):
+def go(direction, current_room, rooms, inventory):
+    if not direction:
+        return "Sorry, you need to 'go' somewhere.", current_room
+    
+    direction_map = {"n": "north", "s": "south", "e": "east", "w": "west",
+                     "ne": "northeast", "nw": "northwest", "se": "southeast", "sw": "southwest"}
+    full_direction = direction_map.get(direction, direction)
+    resolved_direction, success = resolve_abbreviation(full_direction, rooms[current_room]['exits'].keys())
+    if success:
+        new_room = rooms[current_room]['exits'][resolved_direction]
+        return display_room(new_room, rooms), new_room
+    return f"Did you want to go {resolved_direction}?", current_room
+
+def get(item, current_room, rooms, inventory):
+    if not item:
+        return "Sorry, you need to 'get' something.", inventory
+
+    possible_items = rooms[current_room].get('items', [])
+    resolved_item, success = resolve_abbreviation(item, possible_items)
+    if success:
+        inventory.append(resolved_item)
+        rooms[current_room]['items'].remove(resolved_item)
+        return f"You pick up the {resolved_item}.", inventory
+    else:
+        return f"Did you want to get {resolved_item}?", inventory
+
+def look(current_room, rooms):
+    return display_room(current_room, rooms), current_room
+
+def inventory_display(inventory):
+    if inventory:
+        return "Inventory:\n  " + "\n  ".join(inventory)
+    else:
+        return "You're not carrying anything."
+
+def drop(item, current_room, rooms, inventory):
+    if item in inventory:
+        inventory.remove(item)
+        rooms[current_room].setdefault('items', []).append(item)
+        return f"You drop the {item}.", inventory
+    else:
+        return f"You don't have a {item} to drop.", inventory
+
+def help_command():
+    return ("You can run the following commands:\n"
+            "  go ...\n"
+            "  get ...\n"
+            "  look\n"
+            "  inventory\n"
+            "  drop ...\n"
+            "  quit\n"
+            "  help")
+
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: python3 adventure.py [map filename]")
+        sys.exit(1)
+    
+    game_map = load_map(sys.argv[1])
     current_room = game_map['start']
+    rooms = {room['name']: room for room in game_map['rooms']}
     inventory = []
-    valid_commands = ["go", "get", "look", "inventory", "quit", "drop", "help"]
-    direction_abbreviations = {
-        'n': 'north', 'e': 'east', 'w': 'west', 's': 'south',
-        'ne': 'northeast', 'nw': 'northwest', 'sw': 'southwest', 'se': 'southeast'
-    }
 
+    print(display_room(current_room, rooms))
     while True:
-        room_info = next(room for room in game_map['rooms'] if room['name'] == current_room)
-        print(f"> {room_info['name']}\n{room_info['desc']}\n")
-        if 'items' in room_info and room_info['items']:
-            print("Items: " + ", ".join(room_info['items']))
-        print("Exits: " + " ".join(room_info['exits'].keys()) + "\n")
-        
-        command = input("What would you like to do? ").strip().lower()
-        command_parts = command.split()
-        if not command_parts:
-            continue
+        command = input().strip().lower()
+        parts = command.split()
+        verb = parts[0]
+        argument = ' '.join(parts[1:]) if len(parts) > 1 else ""
 
-        cmd = command_parts[0]
-        if cmd in direction_abbreviations and len(command_parts) == 1:
-            cmd = "go"
-            command_parts = ["go", direction_abbreviations[command_parts[0]]]
-
-        if cmd not in valid_commands and cmd not in direction_abbreviations:
-            print("Unknown command.")
-            continue
-
-        if cmd == "quit":
+        if verb in ["quit", "q"]:
             print("Goodbye!")
             break
-        elif cmd in ["go", "drop", "get"] and len(command_parts) < 2:
-            print(f"Please specify where or what to {cmd}.")
-        elif cmd == "go":
-            direction, error = resolve_abbreviation(command_parts[1], room_info['exits'].keys(), direction_abbreviations)
-            if error:
-                print(error)
-            elif direction:
-                current_room = room_info['exits'][direction]
-        elif cmd == "look":
-            continue
-        elif cmd == "get":
-            item, error = resolve_abbreviation(command_parts[1], room_info.get('items', []), {})
-            if error:
-                print(error)
-            elif item:
-                inventory.append(item)
-                room_info['items'].remove(item)
-                print(f"You pick up the {item}.")
-        elif cmd == "inventory":
-            if inventory:
-                print("Inventory:\n  " + "\n  ".join(inventory))
-            else:
-                print("You're not carrying anything.")
-        elif cmd == "drop":
-            item, error = resolve_abbreviation(command_parts[1], inventory, {})
-            if error:
-                print(error)
-            elif item:
-                inventory.remove(item)
-                room_info.setdefault('items', []).append(item)
-                print(f"You drop the {item}.")
-        elif cmd == "help":
-            print("Available commands: go, get, look, inventory, quit, drop, help")
+        elif verb in ["go", "g"]:
+            output, current_room = go(argument, current_room, rooms, inventory)
+            print(output)
+        elif verb in ["look", "l"]:
+            output, current_room = look(current_room, rooms)
+            print(output)
+        elif verb in ["get", "g"]:
+            output, inventory = get(argument, current_room, rooms, inventory)
+            print(output)
+        elif verb in ["drop", "d"]:
+            output, inventory = drop(argument, current_room, rooms, inventory)
+            print(output)
+        elif verb in ["inventory", "i"]:
+            print(inventory_display(inventory))
+        elif verb == "help":
+            print(help_command())
+        else:
+            print("I don't understand that command.")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python adventure.py [map filename]")
-        sys.exit(1)
-    game_map = load_map(sys.argv[1])
-    game_loop(game_map)
+    main()
+
+
 
 
 
