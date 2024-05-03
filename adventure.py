@@ -35,15 +35,11 @@ class GameState:
         action = command_parts[0]
         args = command_parts[1:]
 
-        if action in ['quit', 'exit']:
-            print("Goodbye!")
-            sys.exit(0)
-
         if action == "look":
             print(self.current_room.describe())
         elif action == "help":
             self.display_help()
-        elif action == "inventory" or action == "inv":
+        elif action == "inventory":
             self.show_inventory()
         elif action == "go":
             self.handle_go(args)
@@ -51,6 +47,9 @@ class GameState:
             self.handle_get(args)
         elif action == "drop":
             self.handle_drop(args)
+        elif action == "quit":
+            print("Goodbye!")
+            sys.exit(0)
         else:
             print("Unknown command. Type 'help' for a list of commands.")
 
@@ -65,13 +64,17 @@ class GameState:
             print("Go where?")
             return
         arg = " ".join(args)
-        matched_exits = [exit for exit in self.current_room.exits if exit.startswith(arg)]
-        if len(matched_exits) == 1:
-            self.move_to_room(matched_exits[0])
-        elif len(matched_exits) > 1:
-            print("Did you want to go " + " or ".join(matched_exits) + "?")
+
+        if arg in ["n", "s", "e", "w"]:
+            print(f"Options: {arg}, {arg}ast, {arg}est")
         else:
-            print("There's no way to go " + arg + ".")
+            matched_exits = [exit for exit in self.current_room.exits if exit.startswith(arg)]
+            if len(matched_exits) == 1:
+                self.move_to_room(matched_exits[0])
+            elif len(matched_exits) > 1:
+                print("Did you want to go " + " or ".join(matched_exits) + "?")
+            else:
+                print("There's no way to go " + arg + ".")
 
     def handle_get(self, args):
         if not args:
@@ -116,15 +119,29 @@ class GameState:
             print(f"  {command}: {description}")
         print()
 
+def validate_map(data):
+    if 'start' not in data or 'rooms' not in data:
+        print("Invalid map: Missing start or rooms.")
+        return False
+    if data['start'] not in [room['name'] for room in data['rooms']]:
+        print("Invalid map: Start room does not exist.")
+        return False
+    return True
+
 def load_game_map(filename):
     try:
         with open(filename) as file:
             data = json.load(file)
+            if not validate_map(data):
+                sys.exit(1)
             rooms = [Room(**room_data) for room_data in data['rooms']]
             start_room = data['start']
             return rooms, start_room
     except FileNotFoundError:
         print(f"Error: The file '{filename}' does not exist.")
+        sys.exit(1)
+    except json.JSONDecodeError:
+        print("Error: Invalid JSON format.")
         sys.exit(1)
 
 def main():
@@ -137,20 +154,18 @@ def main():
     game_state = GameState(rooms, start_room)
 
     print(game_state.current_room.describe())
-    try:
-        while True:
-            command = input("What would you like to do? ").strip().lower()
-            game_state.process_command(command)
-    except EOFError:
-        print("\nUse 'quit' to exit.")
-        main()  # Restart the main loop to continue the game
-    except KeyboardInterrupt:
-        print("\nGoodbye!")  # Handle Ctrl-C to exit immediately
-        sys.exit(0)
+    while True:
+        try:
+            command_input = input("What would you like to do? ").strip().lower()
+            game_state.process_command(command_input)
+        except EOFError:
+            print("\nUse 'quit' to exit.")
+        except KeyboardInterrupt:
+            print("\nGoodbye!")
+            sys.exit(0)
 
 if __name__ == "__main__":
     main()
-
 
 
 #comment
