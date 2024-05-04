@@ -15,10 +15,10 @@
  No unresolved bugs or issues are present at the time of this writing. All identified issues have been addressed during the development process.
 
 #Challenging Issue
-[Describe a challenging bug you encountered and how you resolved it. This section should detail the problem, your approach to solving it, and the solution.]
+In text-based adventure games, players often use abbreviated commands for efficiency and ease, especially for common actions like navigation. The challenge in this project arose when implementing abbreviated direction commands (e.g., 'n' for 'north', 's' for 'south', etc.). The issue became particularly complex when rooms had multiple exits in similar directions, such as 'north' and 'northeast'. The initial implementation allowed for simple abbreviations, but did not adequately handle situations where these abbreviations could refer to multiple possible directions. 
 
 #Extensions Implemented
- 1.Help Command: To assist players, the help command provides a list of all valid commands. This is crucial for guiding players on how to interact with the game.
- 2.Drop Command: The drop feature allows players to remove items from their inventory and leave them in the current room, mirroring the functionality of the get command but in reverse.
+ 1.Help Command: In text-based adventure games, especially ones with a variety of possible actions and commands, it can be challenging for players to remember all available interactions. The Help command is designed to assist players by listing all valid commands they can use at any point during gameplay. 
+ 2.Drop Command: The Drop command is essential for managing the player's inventory and interacting with the game's environment. It allows the player to remove items from their inventory and leave them in the current room, providing strategic gameplay elements related to item management.When players pick up items with the get command, these items are added to their inventory. If the inventory becomes overloaded, or if the player wishes to use or leave an item for later retrieval, they can use the drop command to place an item back into the room.
  3.Win Condition: The win condition is fulfilled in the "Boss room." The player must arrive with both a "sword" and a "magic wand" to succeed. The "sword" is located in the "Blue room" and the "magic wand" in the "Green room," which strategically requires navigating multiple rooms to collect these items before confronting the final challenge.
 
