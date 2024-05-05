@@ -17,7 +17,7 @@
       "name": "A green room",
       "desc": "You are in a simple room, with bright green walls.",
       "exits": { "west": "A blue room", "south": "A red room" },
-      "items": ["magic wand"]
+      "items": ["magic wand","banana", "bandana", "bellows", "deck of cards"]
     },
     {
       "name": "A red room",

@@ -41,9 +41,9 @@ def game_loop(game_map):
     def display_room_info(room):
         print(f"> {room['name']}\n")
         print(room['desc'] + "\n")
-        if room.get('items'):
+        if 'items' in room and room['items']:
             print("Items: " + ", ".join(room['items']))
-        print("Exits: " + " ".join(room['exits'].keys()) + "\n")
+        print("Exits: " + " ".join(room['exits'].keys()) + "\n") # Detailed exits
 
     while True:
         room_info = next(room for room in game_map['rooms'] if room['name'] == current_room)
@@ -61,10 +61,11 @@ def game_loop(game_map):
                 print(f"There's no way to go {full_direction}.")
         elif command.startswith("go "):
             direction = command.split()[1]
-            if direction in direction_mapping and direction_mapping[direction] in room_info['exits']:
-                current_room = room_info['exits'][direction_mapping[direction]]
+            full_direction = direction_mapping.get(direction, direction)  # Maps abbreviation or uses as-is
+            if full_direction in room_info['exits']:
+                current_room = room_info['exits'][full_direction]
             else:
-                print(f"There's no way to go {direction}.")
+                print(f"There's no way to go {full_direction}.")
         elif command.startswith("get "):
             prefix = command.split(maxsplit=1)[1]
             if 'items' in room_info:
