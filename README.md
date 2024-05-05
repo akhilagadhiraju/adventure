@@ -1,7 +1,11 @@
 #Text-Based Adventure Game
+
 #Name:Akhila Gadhiraju
+
 #Stevens Login: agadhira@stevens.edu
+
 #GitHub Repository: https://github.com/akhilagadhiraju/adventure.git
+
 #Project Overview
  This project is a text-based adventure game implemented in Python. Players navigate through various rooms, each uniquely described, by executing text commands that interact with the environment and items within the game world.
 
