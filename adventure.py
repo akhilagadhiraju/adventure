@@ -67,22 +67,25 @@ def game_loop(game_map):
                 print(f"There's no way to go {direction}.")
         elif command.startswith("get "):
             prefix = command.split(maxsplit=1)[1]
-            matching_items = [item for item in room_info['items'] if item.startswith(prefix)]
-            if len(matching_items) == 1:
-                item = matching_items[0]
-                inventory.append(item)
-                room_info['items'].remove(item)
-                print(f"You pick up the {item}.")
-            elif len(matching_items) > 1:
-                response = input(f"Did you want to get {' or '.join(matching_items)}? ").strip().lower()
-                if response in matching_items:
-                    inventory.append(response)
-                    room_info['items'].remove(response)
-                    print(f"You pick up the {response}.")
+            if 'items' in room_info and room_info['items']:
+                matching_items = [item for item in room_info['items'] if item.startswith(prefix)]
+                if len(matching_items) == 1:
+                    item = matching_items[0]
+                    inventory.append(item)
+                    room_info['items'].remove(item)
+                    print(f"You pick up the {item}.")
+                elif len(matching_items) > 1:
+                    response = input(f"Did you want to get {' or '.join(matching_items)}? ").strip().lower()
+                    if response in matching_items:
+                        inventory.append(response)
+                        room_info['items'].remove(response)
+                        print(f"You pick up the {response}.")
+                    else:
+                        print("Invalid item. Try again.")
                 else:
-                    print("Invalid item. Try again.")
+                    print(f"There's no item starting with '{prefix}'.")
             else:
-                print(f"There's no item starting with '{prefix}'.")
+                print("No items to pick up in this room.")
         elif command in ["inventory", "inv"]:
             if inventory:
                 print("Inventory:\n  " + "\n  ".join(inventory))
