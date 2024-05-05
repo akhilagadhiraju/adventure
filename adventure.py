@@ -35,7 +35,9 @@ def game_loop(game_map):
         "ne": "northeast",
         "nw": "northwest",
         "se": "southeast",
-        "sw": "southwest"
+        "sw": "southwest",
+        "in": "in",
+        "out": "out"
     }
 
     def display_room_info(room):
@@ -43,7 +45,7 @@ def game_loop(game_map):
         print(room['desc'] + "\n")
         if 'items' in room and room['items']:
             print("Items: " + ", ".join(room['items']))
-        print("Exits: " + " ".join(room['exits'].keys()) + "\n") # Detailed exits
+        print("Exits: " + " ".join(room['exits'].keys()) + "\n")
 
     while True:
         room_info = next(room for room in game_map['rooms'] if room['name'] == current_room)
